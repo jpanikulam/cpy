@@ -3,10 +3,10 @@ from core import Code
 
 class While():
     def __init__(self, expression):
-        self.condition = expression
+        self.condition = str(expression)
 
     def __enter__(self):
-        Code.add('while (self.condition)')
+        Code.add('while ({})'.format(self.condition))
         Code.start_scope()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -15,10 +15,10 @@ class While():
 
 class If(object):
     def __init__(self, expression):
-        self.condition = expression
+        self.condition = str(expression)
 
     def __enter__(self):
-        Code.add('if (self.condition)')
+        Code.add('if ({})'.format(self.condition))
         Code.start_scope()
         return self
 
@@ -26,7 +26,10 @@ class If(object):
         # Will I ever use that kind of funny business?
         Code.end_scope()
 
+
     class Else(object):
+        '''TODO: Make this smart
+        '''
         def __enter__(self):
             Code.add('else')
             Code.start_scope()
@@ -36,11 +39,13 @@ class If(object):
             Code.end_scope()
 
     class ElseIf(object):
+        '''TODO: Make this smart
+        '''
         def __init__(self, expression):
-            self.condition = expression
+            self.condition = str(expression)
 
         def __enter__(self):
-            Code.add('else if (self.condition)')
+            Code.add('else if ({})'.format(self.condition))
             Code.start_scope()
             return self
 

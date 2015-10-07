@@ -9,6 +9,7 @@ class Code(object):
     indentor = '  '
     scope = 0
 
+    # Configuration
     @classmethod
     def set_indentor(self, char='  '):
         '''char should be something like
@@ -19,6 +20,7 @@ class Code(object):
         '''
         self.indentor = char
 
+    # Primitive format variation
     @classmethod
     def start_scope(self):
         '''TODO: Make Configurable'''
@@ -45,6 +47,7 @@ class Code(object):
         assert isinstance(amt, int), "Indentation amount must be an integer"
         self.indentation_state -= amt
 
+    # Primitive code addition
     @classmethod
     def add(self, line):
         indentation = self.indentation_state * self.indentor
@@ -54,3 +57,9 @@ class Code(object):
     def add_line(self, line):
         indentation = self.indentation_state * self.indentor
         self.code += indentation + str(line) + ';\n'
+
+    # Non-primitive code addition
+    @classmethod
+    def add_function(self, abstract_function):
+        '''Now, how will this work?'''
+        pass
