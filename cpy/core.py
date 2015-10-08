@@ -1,4 +1,5 @@
 class Code(object):
+    _debug = False
     code = ""
     abstract_code = {
         'definitions': {},
@@ -8,6 +9,15 @@ class Code(object):
     indentation_state = 0
     indentor = '  '
     scope = 0
+
+    @classmethod
+    def set_debugmode(self, mode=1):
+        self._debug = mode
+
+    @classmethod
+    def debug(self, *text):
+        if self._debug > 0:
+            self.code.add(' '.join(map(str, text)) + '\n')
 
     # Configuration
     @classmethod
@@ -22,17 +32,25 @@ class Code(object):
 
     # Primitive format variation
     @classmethod
-    def start_scope(self):
-        '''TODO: Make Configurable'''
+    def start_scope(self, scope_name=None):
+        '''TODO: Make Configurable
+            No scope name (None) -> Generic scpoe
+            Otherwise, it should be a function or class name
+        '''
         self.scope += 1
+        self.debug('Scope Level: {}'.format(self.scope))
         assert self.scope >= 0, "We have a mismatched curly brace, CPY thinks we're at a negative scope level"
         self.code += ' {\n'
         self.up_indentation()
 
     @classmethod
-    def end_scope(self):
-        '''TODO: Make Configurable'''
+    def end_scope(self, scope_name=None):
+        '''TODO: Make Configurable
+            No scope name (None) -> Generic scpoe
+            Otherwise, it should be a function or class name
+        '''
         self.scope -= 1
+        self.debug('Scope Level: {}'.format(self.scope))
         assert self.scope >= 0, "We have a mismatched curly brace, CPY thinks we're at a negative scope level"
         self.down_indentation()
         self.add('}\n')
