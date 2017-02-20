@@ -94,6 +94,7 @@ class SparseMatrix(object):
 
         new_mat = SparseMatrix((self.rows, other.cols))
         for row_num, index_set in self.row_cache.items():
+
             for col_num in range(other.cols):
                 if col_num not in other.col_cache.keys():
                     continue
@@ -103,8 +104,7 @@ class SparseMatrix(object):
                 for el in common:
                     dot_product += self.entries[(row_num, el)] * other.entries[(el, col_num)]
 
-                # Only if it is not EXACTLY integer 0
-                if dot_product != 0:
+                if len(common):
                     new_mat.add_entry((row_num, col_num), dot_product)
 
         return new_mat
