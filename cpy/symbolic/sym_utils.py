@@ -34,6 +34,21 @@ def norm(expr):
     return sympy.sqrt(expr.dot(expr))
 
 
+def gradient(expr, symbol):
+    return sympy.Matrix([expr]).jacobian(symbol)
+
+
+def rotation2d(theta):
+    return sympy.Matrix([
+        [sympy.cos(theta), -sympy.sin(theta)],
+        [sympy.sin(theta), sympy.cos(theta)]
+    ])
+
+
+def cross2d(a, b):
+    return (a[0] * b[1]) - (a[1] * b[0])
+
+
 def to_sparse(matrix):
     entries = {}
     for row in range(matrix.rows):
@@ -61,5 +76,5 @@ if __name__ == '__main__':
     sb = to_sparse(b)
     sparse.diagstack(sA, sA, sA, sA, sb).spy()
 
-    # from matplotlib import pyplot as plt
-    # plt.show()
+    from matplotlib import pyplot as plt
+    plt.show()

@@ -60,7 +60,7 @@ class Log(object):
         else:
             print('-' * term_width)
 
-# Let's call this metaprogramming
+# Let's call this metaprogramming, yea?
 Log.add_logger("info", Fore.WHITE)
 Log.add_logger("good", Fore.GREEN)
 Log.add_logger("note", Fore.BLUE)

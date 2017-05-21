@@ -1,9 +1,140 @@
+# -*- coding: utf-8 -*-
+
 import sympy
 import numpy as np
-import operator
 
 
-class SparseMatrix(object):
+class MatrixOperation(object):
+    def __init__(self, mtx):
+        self.mtx = mtx
+
+    @property
+    def shape(self):
+        return self.mtx.shape
+
+    def __add__(self, other):
+        return Sum(self, other)
+
+    def __sub__(self, other):
+        return Sum(self, -other)
+
+    def __mul__(self, other):
+        return Product(self, other)
+
+    def __neg__(self):
+        return Negate(self)
+
+    def inv(self):
+        return Inverse(self)
+
+    def transpose(self):
+        return Transpose(self)
+
+    def stringify(self):
+        return self.mtx
+
+    def __str__(self):
+        # return "MatrixOp<{}>".format(str(self.mtx))
+        return "MatrixOp<{}>".format(self.stringify())
+
+
+class Transpose(MatrixOperation):
+    def __init__(self, mtx):
+        self.mtx = mtx
+
+    @property
+    def shape(self):
+        _shape = self.mtx.shape
+        return (_shape[1], _shape[0])
+
+    def transpose(self):
+        return self.mtx
+
+    def stringify(self):
+        if isinstance(self.mtx, SparseMatrix):
+            return "{}ᵀ".format(self.mtx)
+        else:
+            return "({})ᵀ".format(self.mtx)
+
+
+class Negate(MatrixOperation):
+    def __init__(self, mtx):
+        self.mtx = mtx
+
+    def __neg__(self):
+        return self.mtx
+
+    def stringify(self):
+        if isinstance(self.mtx, SparseMatrix):
+            return "-{}".format(self.mtx.stringify())
+        else:
+            return "-({})".format(self.mtx.stringify())
+
+
+class Sum(MatrixOperation):
+    def __init__(self, *args):
+        for k in range(1, len(args)):
+            assert args[k - 1].shape == args[k].shape
+
+        self.summands = args
+
+    @property
+    def contributors(self):
+        return self.summands
+
+    @property
+    def shape(self):
+        return self.summands[0].shape
+
+    def stringify(self):
+        return " + ".join(map(lambda o: o.stringify(), self.summands))
+
+
+class Product(MatrixOperation):
+    def __init__(self, *args):
+        for k in range(1, len(args)):
+            assert args[k - 1].shape[1] == args[k].shape[0]
+
+        self._shape = (args[0].shape[0], args[-1].shape[1])
+        self.factors = args
+
+    @property
+    def contributors(self):
+        return self.factors
+
+    @property
+    def shape(self):
+        return self._shape
+
+    def stringify(self):
+        return " * ".join(map(lambda o: o.stringify(), self.factors))
+
+    def __mul__(self, other):
+        if isinstance(other, Product):
+            u = self.factors
+            u.extend(other.factors)
+            return Product(*u)
+
+        u = self.factors + (other,)
+        return Product(*u)
+
+
+class Inverse(MatrixOperation):
+    def __init__(self, mtx):
+        assert mtx.shape[0] == mtx.shape[1]
+        self.mtx = mtx
+
+    def inv(self):
+        return self.mtx
+
+    def stringify(self):
+        if isinstance(self.mtx, SparseMatrix):
+            return "{}⁻¹".format(self.mtx.stringify())
+        else:
+            return "({})⁻¹".format(self.mtx.stringify())
+
+
+class SparseMatrix(MatrixOperation):
     """COO.
 
     TODO
@@ -19,12 +150,17 @@ class SparseMatrix(object):
     -----
     Man, COO sucks.
     """
-    def __init__(self, shape, entries={}):
+    def __init__(self, shape, entries={}, name="SparseMat"):
         """Do nothing."""
         self._rows, self._cols = shape
         self._entries = entries
         self._col_cache = self._cache_columns(entries)
         self._row_cache = self._cache_rows(entries)
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def entries(self):
@@ -45,6 +181,10 @@ class SparseMatrix(object):
     @property
     def row_cache(self):
         return self._row_cache
+
+    @property
+    def shape(self):
+        return (self._rows, self._cols)
 
     def shift_down(self, n):
         new_entries = shift_down(self.entries, n)
@@ -160,20 +300,32 @@ class SparseMatrix(object):
 
         plt.imshow(image, origin='upper')
 
+    # def __str__(self):
+        # return str(self.densify())
+
+    def stringify(self):
+        return self._name
+
     def __str__(self):
-        return str(self.densify())
+        return self._name
+
+    def __repr__(self):
+        return self._name
 
     def __add__(self, other):
-        return self.pairwise(other, operator.add)
+        return Sum(self, other)
 
     def __sub__(self, other):
-        return self.pairwise(other, operator.sub)
+        return Sum(self, -other)
 
     def __mul__(self, other):
-        return self.pairwise(other, operator.mul)
+        return Product(self, other)
 
-    def __div__(self, other):
-        return self.pairwise(other, operator.div)
+    def __neg__(self):
+        return Negate(self)
+
+    def inv(self):
+        return Inverse(self)
 
     def __setitem__(self, key, val):
         self.add_entry(key, val)
@@ -275,6 +427,7 @@ def zeros(shape):
 
 
 if __name__ == '__main__':
+    exit(0)
     from matplotlib import pyplot as plt
     spm = zeros((5, 5))
     spm.add_entry((0, 1), 1)
