@@ -24,8 +24,8 @@ class MatrixOperation(object):
     def __neg__(self):
         return Negate(self)
 
-    def inv(self):
-        return Inverse(self)
+    def inv(self, method='lu'):
+        return Inverse(self, method=method)
 
     def transpose(self):
         return Transpose(self)
@@ -34,7 +34,6 @@ class MatrixOperation(object):
         return self.mtx
 
     def __str__(self):
-        # return "MatrixOp<{}>".format(str(self.mtx))
         return "MatrixOp<{}>".format(self.stringify())
 
 
@@ -110,28 +109,37 @@ class Product(MatrixOperation):
         return " * ".join(map(lambda o: o.stringify(), self.factors))
 
     def __mul__(self, other):
-        if isinstance(other, Product):
-            u = self.factors
-            u.extend(other.factors)
-            return Product(*u)
+        # if isinstance(other, Product):
+        #     u = self.factors
+        #     u.extend(other.factors)
+        #     return Product(*u)
 
         u = self.factors + (other,)
         return Product(*u)
 
 
 class Inverse(MatrixOperation):
-    def __init__(self, mtx):
+    def __init__(self, mtx, method='lu'):
         assert mtx.shape[0] == mtx.shape[1]
         self.mtx = mtx
+
+        self._kinds = [
+            'lu',
+            'llt',
+            'qr',
+        ]
+        assert method in self._kinds, "method must be known"
+
+        self.method = method
 
     def inv(self):
         return self.mtx
 
     def stringify(self):
-        if isinstance(self.mtx, SparseMatrix):
-            return "{}⁻¹".format(self.mtx.stringify())
-        else:
-            return "({})⁻¹".format(self.mtx.stringify())
+        # if isinstance(self.mtx, SparseMatrix):
+            # return "{}({})⁻¹".format(self.mtx.stringify())
+        # else:
+        return "{}({})⁻¹".format(self.method.upper(), self.mtx.stringify())
 
 
 class SparseMatrix(MatrixOperation):

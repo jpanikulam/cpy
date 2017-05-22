@@ -1,4 +1,5 @@
 import sympy
+from cpy.symbolic import sparse, eigen
 # Problem definition
 
 # Plan:
@@ -71,14 +72,36 @@ def rk4(dynamics):
 
 
 class Problem(object):
-    def __init__(self):
+    def __init__(self, dynamics):
         problem = {
             'minimize': None,
             'subject_to': None,
         }
 
-        self.state_dimension = 4
-        self.control_dimension = 2
+        self.state_dimension = dynamics['state'].rows
+        self.control_dimension = dynamics['control'].rows
+
+    def build_iteration(self):
+        A_k = sparse.SparseMatrix((self.state_dimension, self.state_dimension), name="A_k")
+        B_k = sparse.SparseMatrix((self.state_dimension, self.control_dimension), name="B_k")
+        R_k = sparse.SparseMatrix((self.control_dimension, self.control_dimension), name="R_k")
+        P_k_next = sparse.SparseMatrix((self.state_dimension, self.state_dimension), name="P_k_next")
+        Q_k = sparse.SparseMatrix((self.state_dimension, self.state_dimension), name="Q_k")
+
+        btpa = B_k.transpose() * P_k_next * A_k
+        r_plus_btpb = (R_k + (B_k.transpose() * P_k_next * B_k))
+        F_k = r_plus_btpb.inv('llt') * btpa
+
+        atpa = A_k.transpose() * P_k_next * A_k
+        P_k = atpa - (btpa.transpose() * F_k) + Q_k
+
+        print(F_k)
+        print(P_k)
+
+        print '---'
+        policy = eigen.NoOptEigenPolicy()
+        print policy.write(P_k)
+        print policy.write(F_k)
 
 
 if __name__ == '__main__':
@@ -88,18 +111,10 @@ if __name__ == '__main__':
     dyn = simple_dynamics()
     qn_f = rk4(dyn)
 
-    xx = np.array([0.0, 0.0, 1.0, 0.0])
-    qn_f = qn_f.subs(sympy.Symbol('h'), 0.1)
-    qn_fixed_u = vec_subs(qn_f, dyn['control'], np.array([0.001, -0.1]))
+    p = Problem(dyn)
+    p.build_iteration()
 
-    t = np.arange(0.0, 2.0, 0.1)
-    hist = []
+    # xx = np.array([0.0, 0.0, 1.0, 0.0])
+    # qn_f = qn_f.subs(sympy.Symbol('h'), 0.1)
+    # qn_fixed_u = vec_subs(qn_f, dyn['control'], np.array([0.001, -0.1]))
 
-    for tt in t:
-        xx = np.array(vec_subs(qn_fixed_u, dyn['state'], xx))
-        hist.append(xx)
-
-    hist = np.hstack(hist)
-    plt.plot(t, hist[1, :])
-    plt.plot(t, hist[0, :])
-    # plt.show()

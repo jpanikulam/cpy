@@ -56,8 +56,7 @@ class NoOptEigenPolicy(MatrixPolicy):
     def write(self, mat_operation):
         self.members.clear()
         text = self._stringify(mat_operation)
-        members = set(self.members)
-        print members
+        self.members = set(self.members)
         return text
 
 
