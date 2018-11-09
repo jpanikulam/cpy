@@ -1,5 +1,7 @@
 import sympy
 from cpy.symbolic import sparse, eigen
+from dynamics import rk4
+
 # Problem definition
 
 # Plan:
@@ -44,31 +46,6 @@ def simple_dynamics():
     }
 
     return dynamics
-
-
-def vec_subs(expr, vec, targs):
-    nexpr = expr
-    for n, elem in enumerate(vec):
-        nexpr = nexpr.subs(elem, targs[n])
-
-    return nexpr
-
-
-def rk4(dynamics):
-    q = dynamics['state']
-    qdot = dynamics['dynamics']
-
-    h = sympy.Symbol('h')
-    h_half = sympy.Rational(1, 2) * h
-    h_sixth = sympy.Rational(1, 6) * h
-
-    k1 = qdot
-    k2 = vec_subs(qdot, q, q + (h_half * k1))
-    k3 = vec_subs(qdot, q, q + (h_half * k2))
-    k4 = vec_subs(qdot, q, q + (h * k3))
-
-    qn = q + (h_sixth * h) * (k1 + (2 * k2) + (2 * k3) + k4)
-    return qn
 
 
 class Problem(object):

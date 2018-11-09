@@ -101,16 +101,19 @@ class Code(object):
         self.stale = True
 
     def generate(self):
-        for function in self.syntax_dict['functions']:
-            with GenFunc(function.name, self) as gen_func:
-                for var in function.scope_vars:
-                    self.declare(**var)
+        # for function in self.syntax_dict['functions']:
+        #     with GenFunc(function.name, self) as gen_func:
+        #         for var in function.scope_vars:
+        #             self.declare(**var)
 
-        for cstruct in self.syntax_dict['structs']:
-            with GenStruct(self, cstruct.name) as gen_struct:
-                for member_name, member_dict in cstruct.members.items():
-                    gen_struct.write_member(member_name, member_dict)
+        # for cstruct in self.syntax_dict['structs']:
+        #     with GenStruct(self, cstruct.name) as gen_struct:
+        #         for member_name, member_dict in cstruct.members.items():
+        #             gen_struct.write_member(member_name, member_dict)
 
+        text = ""
+        for thing in self.children:
+            text += thing.generate()
         self.stale = False
 
     @property
@@ -128,42 +131,58 @@ class Code(object):
         return self
 
 
-class CppScope(object):
-    def __init__(self, title_text, code):
-        self.title_text = title_text
-        self.code = code
+class CppScope(Code):
+    # def __init__(self, title_text):
+    #     self.title_text = title_text
+    #     self.children = []
 
-    def __enter__(self, *args):
-        # self.code += (self.title_text + '{')
+    def insert(self, other):
+        self.children.append(other)
+
+    def generate(self):
+        text = "{\n"
+        for child in self.children:
+            child.generate()
+        text += "\n}"
+
+"""    def __enter__(self, *args):
         self.code.write(self.title_text + '{')
         return self
 
     def __exit__(self, *args):
         self.code.write('}')
+"""
 
 
 class GenStruct(CppScope):
-    def __init__(self, code, name, constructor=True):
+    def __init__(self, name, constructor=True):
         self.name = name
-        self.code = code
         self.title_text = 'struct {name}'.format(name=name)
         self.make_constructor = constructor
-        self.members = {}
+        self.members = OrderedDict()
 
     def write_member(self, name, member_dict):
-        self.code.declare(
+        self.declare(
             member_dict['var_type'],
             name,
             member_dict['var_value'],
         )
 
-    def __exit__(self, *args):
-        self.code.write('};')
+    def add_member(self, name, member):
+        self.members[name] = member
+
+    def generate(self):
+        text = "{\n"
+        for member, contents in self.members.items():
+            self.write_member(member, contents)
+        text += "\n};"
+        return text
 
 
 # TODO
 class GenFunc(CppScope):
     def __init__(self, code, name, return_type, *args):
+        raise NotImplementedError
         self.name = name
         self.code = code
         self.args = args
@@ -185,17 +204,9 @@ class GenFunc(CppScope):
         self.code.write('};')
 
 
-class Boost():
-    # BOOST_PYTHON_MODULE(example)                     // set scope to example
-    # {
-    #   namespace python = boost::python;
-    #   {
-    #     python::scope in_human =                     // define example.Human and set
-    #       python::class_<Human>("Human");            // scope to example.Human
-    #
-    #     python::class_<Human::emotion>("Emotion")    // define example.Human.Emotion
-    #       .add_property("joy", &Human::emotion::joy)
-    #       ;
-    #   }                                              // revert scope, scope is now
-    # }
+def main():
     pass
+
+
+if __name__ == '__main__':
+    main()

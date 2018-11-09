@@ -150,7 +150,6 @@ class CpyFunction(CpyScope):
         return ', '.join(declarations)
 
     def declaration(self):
-        # return formatting.form_line([self.return_type, self.name, '(', self._arg_string, ')', ' '.join(self.qualifiers)])
         return ' '.join([self.return_type, self.name, '(', self._arg_string, ')', ' '.join(self.qualifiers)])
 
     def __str__(self):
@@ -161,15 +160,19 @@ class CpyFunction(CpyScope):
         )
 
 
+def to_type(cpp_type):
+    assert isinstance(cpp_type, str)
+    return cpp_type
+
+
 class CpyStruct(CpyScope):
-    def __init__(self, name, enclosing_scope):
+    def __init__(self, name, enclosing_scope=None):
         super(CpyStruct, self).__init__(enclosing_scope=enclosing_scope, end_in_semicolon=True)
         self.members = []
         self.name = name
 
-    def add_member(self, cpy_var):
-        self.members.append(cpy_var)
-        # self.write(cpy_var.declare())
+    def add_member(self, cpp_type, name):
+        self.members.append(((to_type(cpp_type)), name))
 
     def generate(self):
         """Generate code for this class.
@@ -181,7 +184,8 @@ class CpyStruct(CpyScope):
         """
         self.start()
         for member in self.members:
-            self.write(member.declare())
+            # self.write(member.declare())
+            self.line(*member)
         self.end()
 
     def declaration(self):

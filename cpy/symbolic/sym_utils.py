@@ -62,6 +62,14 @@ def to_sparse(matrix):
     return sparse.SparseMatrix(matrix.shape, entries)
 
 
+def vec_subs(expr, vec, targs):
+    nexpr = expr
+    for n, elem in enumerate(vec):
+        nexpr = nexpr.subs(elem, targs[n])
+
+    return nexpr
+
+
 if __name__ == '__main__':
     a = vector('a', 5)
     b = vector('b', 5)
